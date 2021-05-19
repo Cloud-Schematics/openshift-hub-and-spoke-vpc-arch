@@ -27,10 +27,6 @@ data ibm_is_image linux_vsi_image {
 
 resource ibm_is_instance linux_vsi {
 
-    triggers = {
-        cluster_id = var.cluster_id
-    }
-
     name           = "${var.unique_id}-vsi-nlb-proxy"
     image          = data.ibm_is_image.linux_vsi_image.id
     profile        = var.linux_vsi_machine_type
@@ -63,7 +59,7 @@ rm -rf kubectl kubectl.sha256
 
 # Install IBM Cloud CLI
 curl -sL https://raw.githubusercontent.com/IBM-Cloud/ibm-cloud-developer-tools/master/linux-installer/idt-installer | bash
-ibmcloud plugin install kubernetes-service
+ibmcloud plugin install container-service
 
 # Install OpenShift CLI
 wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-4.5/openshift-client-linux-4.5.39.tar.gz

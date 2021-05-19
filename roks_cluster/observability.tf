@@ -9,9 +9,10 @@ resource ibm_resource_key logdna_secret {
 }
 
 resource ibm_ob_logging logdna_deployment {
-  cluster     = ibm_container_vpc_cluster.cluster.id
-  instance_id = var.logdna_guid
-  depends_on  = [ ibm_resource_key.logdna_secret ]
+  cluster          = ibm_container_vpc_cluster.cluster.id
+  instance_id      = var.logdna_guid
+  private_endpoint = true
+  depends_on       = [ ibm_resource_key.logdna_secret ]
 }
 
 ##############################################################################
@@ -28,9 +29,10 @@ resource ibm_resource_key sysdig_secret {
 }
 
 resource ibm_ob_monitoring sysdig_deployment {
-  cluster     = ibm_container_vpc_cluster.cluster.id
-  instance_id = var.sysdig_guid
-  depends_on  = [ ibm_resource_key.sysdig_secret ]
+  cluster          = ibm_container_vpc_cluster.cluster.id
+  instance_id      = var.sysdig_guid
+  private_endpoint = true
+  depends_on       = [ ibm_resource_key.sysdig_secret ]
 }
 
 ##############################################################################

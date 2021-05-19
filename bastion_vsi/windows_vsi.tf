@@ -15,9 +15,6 @@ data ibm_is_image windows_image {
 
 resource ibm_is_instance windows_vsi {
 
-  triggers = {
-    cluster_id = var.cluster_id
-  }
 
   name           = "${var.unique_id}-windows-vsi"
   image          = data.ibm_is_image.windows_image.id

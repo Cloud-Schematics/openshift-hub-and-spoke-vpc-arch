@@ -21,8 +21,8 @@ resource ibm_is_vpc_routing_table_route hub_vpc_egress {
     zone          = "${var.ibm_region}-${count.index + 1}"
     name          = "${var.unique_id}-egress-zone-${count.index + 1}"
     destination   = module.spoke_vpc.subnet_zone_list[0].cidr
-    action        = "delegate_vpc"
-    next_hop      = ""
+    action        = "deliver"
+    next_hop      = module.bastion_vsi.linux_vsi_info.ipv4_address
 }
 
 ##############################################################################
