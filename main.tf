@@ -22,6 +22,7 @@ module hub_vpc {
     # VPC Variables
     cidr_blocks       = var.hub_vpc_cidr_blocks
     acl_rules         = local.hub_subnet_cidr_rules
+    routing_table_id  = ibm_is_vpc_routing_table.hub_vpc_routing_table.routing_table
 }
 
 module spoke_vpc {

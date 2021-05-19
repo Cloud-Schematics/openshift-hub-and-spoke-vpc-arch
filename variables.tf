@@ -10,6 +10,7 @@ variable TF_VERSION {
 variable ibmcloud_api_key {
   description = "The IBM Cloud platform API key needed to deploy IAM enabled resources"
   type        = string
+  sensitive   = true
 }
 
 variable unique_id {
@@ -59,12 +60,6 @@ variable resource_group {
 ##############################################################################
 # Network variables
 ##############################################################################
-
-variable classic_access {
-  description = "Enable VPC Classic Access. Note: only one VPC per region can have classic access"
-  type        = bool
-  default     = false
-}
 
 variable hub_vpc_cidr_blocks {
   description = "An object containing lists of CIDR blocks. Each CIDR block will be used to create a subnet"

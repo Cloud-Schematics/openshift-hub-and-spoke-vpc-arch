@@ -31,7 +31,6 @@ variable enable_acl_id {
   
 }
 
-
 variable acl_id {
     description = "ID of ACL for subnets to use"
     type        = string
@@ -41,6 +40,12 @@ variable acl_id {
 variable vpc_id {
     description = "ID of VPC where subnet needs to be created"
     type        = string
+}
+
+variable routing_table_id {
+    description = "ID of routing table to connect to subnets."
+    type        = string
+    default     = ""
 }
 
 ##############################################################################

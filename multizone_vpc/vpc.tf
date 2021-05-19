@@ -11,7 +11,6 @@
 resource ibm_is_vpc vpc {
   name                      = "${var.unique_id}-vpc"
   resource_group            = var.resource_group_id
-  address_prefix_management = "manual"
 }
 
 ##############################################################################
@@ -45,6 +44,7 @@ module subnets {
   vpc_id           = ibm_is_vpc.vpc.id
   resource_group   = var.resource_group_id
   public_gateways  = var.enable_public_gateway ? ibm_is_public_gateway.gateway.*.id : []
+  routing_table_id = var.routing_table_id
 }
 
 ##############################################################################

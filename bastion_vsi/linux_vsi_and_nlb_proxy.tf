@@ -247,6 +247,12 @@ private_service_endpoint_port="'$PORT'"
 terraform init
 terraform plan
 echo "yes" | terraform apply
+
+rm -rf terraform.tfvars
+sudo yum -y install epel-release
+sudo yum -y install nginx
+sudo systemctl start nginx  
+
   BASH
                  
 }

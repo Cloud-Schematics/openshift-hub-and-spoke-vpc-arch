@@ -108,10 +108,10 @@ variable cidr_blocks {
 
 }
 
-variable proxy_subnet_cidr {
-  description = "CIDR subnet for OpenShift Cluster Proxy. This subnet will have an attached public gateway. This subnet will be created in zone 1 of the region."
-  type        = string
-  default     = ""
+variable routing_table_id {
+    description = "ID of routing table to connect to subnets."
+    type        = string
+    default     = ""
 }
 
 variable acl_rules {
