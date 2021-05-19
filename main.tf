@@ -3,7 +3,7 @@
 ##############################################################################
 
 data ibm_resource_group resource_group {
-  name = var.resource_group
+    name = var.resource_group
 }
 
 ##############################################################################
@@ -116,6 +116,7 @@ module bastion_vsi {
     windows_vsi_image                     = var.windows_vsi_image
     windows_vsi_machine_type              = var.windows_vsi_machine_type
     # Cluster Variables
+    cluster_id                            = module.roks_cluster.cluster_id
     cluster_name                          = module.roks_cluster.cluster_name
     cluster_private_service_endpoint_port = module.roks_cluster.cluster_private_service_endpoint_port
 }

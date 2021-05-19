@@ -27,20 +27,24 @@ data ibm_is_image linux_vsi_image {
 
 resource ibm_is_instance linux_vsi {
 
-  name           = "${var.unique_id}-vsi-nlb-proxy"
-  image          = data.ibm_is_image.linux_vsi_image.id
-  profile        = var.linux_vsi_machine_type
-  resource_group = var.resource_group_id
+    triggers = {
+        cluster_id = var.cluster_id
+    }
 
-  primary_network_interface {
-    subnet       = var.proxy_subnet.id
-  }
+    name           = "${var.unique_id}-vsi-nlb-proxy"
+    image          = data.ibm_is_image.linux_vsi_image.id
+    profile        = var.linux_vsi_machine_type
+    resource_group = var.resource_group_id
+
+    primary_network_interface {
+      subnet       = var.proxy_subnet.id
+    }
   
-  vpc            = var.vpc_id
-  zone           = var.proxy_subnet.zone
-  keys           = [ ibm_is_ssh_key.ssh_key.id ]
+    vpc            = var.vpc_id
+    zone           = var.proxy_subnet.zone
+    keys           = [ ibm_is_ssh_key.ssh_key.id ]
 
-  user_data  = <<BASH
+    user_data  = <<BASH
 #!/bin/bash
 
 IBMCLOUD_API_KEY="${var.ibmcloud_api_key}"

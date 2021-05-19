@@ -4,33 +4,33 @@
 
 locals {
 
-    hub_subnet_cidr_list = flatten([
-        [
-            # for each zone in the cidr blocks map
-            for zone in keys(var.hub_vpc_cidr_blocks): 
+      hub_subnet_cidr_list = flatten([
             [
-                # Create an object containing the rule name and the CIDR block
-                for cidr in var.hub_vpc_cidr_blocks[zone]:
-                {
-                      # Format name zone-<>-subnet-<>
-                      name = "zone-${
-                            index(keys(var.hub_vpc_cidr_blocks), zone) + 1
-                      }-subnet-${
-                            index(var.hub_vpc_cidr_blocks[zone], cidr) + 1
-                      }"
-                      cidr = cidr
-                }
+                  # for each zone in the cidr blocks map
+                  for zone in keys(var.hub_vpc_cidr_blocks): 
+                  [
+                        # Create an object containing the rule name and the CIDR block
+                        for cidr in var.hub_vpc_cidr_blocks[zone]:
+                        {
+                              # Format name zone-<>-subnet-<>
+                              name = "zone-${
+                                    index(keys(var.hub_vpc_cidr_blocks), zone) + 1
+                              }-subnet-${
+                                    index(var.hub_vpc_cidr_blocks[zone], cidr) + 1
+                              }"
+                              cidr = cidr
+                        }
+                  ]
+            ], 
+            [
+                  {
+                        name = "proxy-subnet"
+                        cidr = var.spoke_vpc_cidr_blocks["zone-1"][0]
+                  }
             ]
-        ],
-        [
-              {
-                    name = "proxy-subnet"
-                    cidr = var.spoke_vpc_cidr_blocks["zone-1"][0]
-              }
-        ]
-    ])
+      ])
 
-    hub_subnet_cidr_rules = flatten([
+      hub_subnet_cidr_rules = flatten([
             [
                   # ROKS Rules
                   {

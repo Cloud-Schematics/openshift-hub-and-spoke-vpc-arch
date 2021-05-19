@@ -113,6 +113,11 @@ variable cluster_private_service_endpoint_port {
   description = "Port of the cluster private service endpoint"
 }
 
+variable cluster_id {
+  description = "ID of the cluster. This is used to trigger the recreation and destruction of VSI"
+  type        = string
+}
+
 ##############################################################################
 
 

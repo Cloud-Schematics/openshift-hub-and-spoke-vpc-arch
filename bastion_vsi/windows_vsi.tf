@@ -14,20 +14,25 @@ data ibm_is_image windows_image {
 ##############################################################################
 
 resource ibm_is_instance windows_vsi {
-    name           = "${var.unique_id}-windows-vsi"
-    image          = data.ibm_is_image.windows_image.id
-    profile        = var.windows_vsi_machine_type
-    resource_group = var.resource_group_id
 
-    primary_network_interface {
-      subnet       = var.proxy_subnet.id
-    }
+  triggers = {
+    cluster_id = var.cluster_id
+  }
+
+  name           = "${var.unique_id}-windows-vsi"
+  image          = data.ibm_is_image.windows_image.id
+  profile        = var.windows_vsi_machine_type
+  resource_group = var.resource_group_id
+
+  primary_network_interface {
+    subnet       = var.proxy_subnet.id
+  }
   
-    vpc            = var.vpc_id
-    zone           = var.proxy_subnet.zone
-    keys           = [ ibm_is_ssh_key.ssh_key.id ]
+  vpc            = var.vpc_id
+  zone           = var.proxy_subnet.zone
+  keys           = [ ibm_is_ssh_key.ssh_key.id ]
 
-    user_data = <<POWERSHELL
+  user_data = <<POWERSHELL
 #ps1_sysnative
 Try {
   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -41,8 +46,8 @@ Catch
 }
     POWERSHELL
 
-    # Prevents the windows VSI from being created before the cluster is finished provisioning
-    depends_on     = [ ibm_is_instance.linux_vsi ]
+  # Prevents the windows VSI from being created before the cluster is finished provisioning
+  depends_on     = [ ibm_is_instance.linux_vsi ]
 }
 
 ##############################################################################

@@ -2,19 +2,34 @@
 # VPC Outputs
 ##############################################################################
 
-output vpc_id {
-  description = "ID of VPC created"
-  value       = module.hub_vpc.vpc_id
+output hub_vpc_id {
+    description = "ID of VPC created"
+    value       = module.hub_vpc.vpc_id
 }
 
-output subnet_zone_list {
+output hub_vpc_subnet_zone_list {
     description = "A map containing cluster subnet IDs and subnet zones"
     value       = module.hub_vpc.subnet_zone_list
 }
 
-output subnet_detail_list {
-  description = "A list of subnets containing names, CIDR blocks, and zones."
-  value       = module.hub_vpc.subnet_detail_list
+output hub_vpc_subnet_detail_list {
+    description = "A list of subnets containing names, CIDR blocks, and zones."
+    value       = module.hub_vpc.subnet_detail_list
+}
+
+output spoke_vpc_id {
+    description = "ID of VPC created"
+    value       = module.spoke_vpc.vpc_id
+}
+
+output spoke_vpc_subnet_zone_list {
+    description = "A map containing cluster subnet IDs and subnet zones"
+    value       = module.spoke_vpc.subnet_zone_list
+}
+
+output spoke_vpc_subnet_detail_list {
+    description = "A list of subnets containing names, CIDR blocks, and zones."
+    value       = module.spoke_vpc.subnet_detail_list
 }
 
 ##############################################################################
