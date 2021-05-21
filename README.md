@@ -153,7 +153,7 @@ This module creates a resource key for the Sysdig and LogDNA resource instances 
 
 #### Note on Sysdig Using Private Service Endpoint
 
-As of the IBM Terraform Provider v1.25.0, the default Sysdig agent Daemonset requires access to the public internet to properly install agents. As a workaround, replace the default image in the Sysdig daemon set in the kubernetes namespace `ibm-observe` with `icr.io/ext/sysdig/agent:latest`. This will enable sysdig monitoring over the private service endpoint
+As of the IBM Terraform Provider v1.25.0, the default Sysdig agent Daemonset uses the Sysdig Agent image hosted at `quay.io/sysdig/agent`. As a workaround, replace the default image in the Sysdig daemon set in the kubernetes namespace `ibm-observe` with `icr.io/ext/sysdig/agent:latest`. This will enable sysdig monitoring over the private service endpoint
 
 -----
 
