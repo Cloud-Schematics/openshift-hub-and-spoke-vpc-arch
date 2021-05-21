@@ -11,16 +11,19 @@ This template creates a multizone Hub VPC, an OpenShift cluster on that VPC, and
 1. [IBM Cloud Resources](##IBM-Cloud-Resources)
     - [Resources](###Resources)
     - [Logging and Monitoring Resources](###Logging-and-Monitoring-Resources)
-2. [Hub VPC](##VPC)
-    - [Access Control List](###Access-Control-List)
-    - [Security Group Rules](###Security-Group-Rule)
-3. [ROKS Cluster](##ROKS-Cluster)
+2. [Hub VPC](##Hub-VPC)
+    - [Hub VPC Access Control List](###Hub-VPC-Access-Control-List)
+    - [Hub VPC Security Group Rules](###Hub-VPC-Security-Group-Rules)
+3. [Spoke VPC](##Spoke-VPC)
+    - [Spoke VPC Access Control List](###Spoke-VPC-Access-Control-List)
+    - [Spoke VPC Security Group Rules](###Spoke-VPC-Security-Group-Rules)
+4. [ROKS Cluster](##ROKS-Cluster)
     - [Cluster Logging and Monitoring](###Cluster-Logging-and-Monitoring)
-4. [Bastion VSI](##Bastion-VSI)
+5. [Bastion VSI](##Bastion-VSI)
     - [Linux VSI](###Linux-VSI)
     - [Windows VSI](###Windows-VSI)
-5. [Architecture Variables](##Architecture-Variables)
-6. [Module Outputs](###Module-Outputs)
+6. [Architecture Variables](##Architecture-Variables)
+7. [Module Outputs](##module-outputs)
 
 -----
 
@@ -218,3 +221,25 @@ linux_vsi_image                 | string                                        
 linux_vsi_machine_type          | string                                                                               | VSI machine type. Run 'ibmcloud is instance-profiles' to get a list of regional profiles                                                                                                                                                                                                                                                                                                                                                                      | `"bx2-8x32"`
 windows_vsi_image               | string                                                                               | Image name used for VSI. Run 'ibmcloud is images' to find available images in a region                                                                                                                                                                                                                                                                                                                                                                        | `"ibm-windows-server-2012-full-standard-amd64-3"`
 windows_vsi_machine_type        | string                                                                               | VSI machine type. Run 'ibmcloud is instance-profiles' to get a list of regional profiles                                                                                                                                                                                                                                                                                                                                                                      | `"bx2-8x32"`
+
+-----
+
+## Module Outputs
+
+Output Name                           | Description
+------------------------------------- |-------------------------------------------------------------
+hub_vpc_id                            | ID of VPC created
+hub_vpc_subnet_zone_list              | A map containing cluster subnet IDs and subnet zones
+hub_vpc_subnet_detail_list            | A list of subnets containing names, CIDR blocks, and zones.
+spoke_vpc_id                          | ID of VPC created
+spoke_vpc_subnet_zone_list            | A map containing cluster subnet IDs and subnet zones
+spoke_vpc_subnet_detail_list          | A list of subnets containing names, CIDR blocks, and zones.
+cos_id                                | ID of COS instance
+kms_guid                              | GUID of Key Protect Instance
+ibm_managed_key_id                    | GUID of User Managed Key
+cluster_id                            | ID of cluster created
+cluster_name                          | Name of cluster created
+cluster_private_service_endpoint_url  | URL For Cluster Private Service Endpoint
+cluster_private_service_endpoint_port | Port for Cluster private service endpoint
+linux_vsi_info                        | Information for the Linux VSI
+windows_vsi_info                      | Information for the Windows Server VSI
