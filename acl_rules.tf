@@ -1,8 +1,12 @@
-
+##############################################################################
 # Create rules for VPC ACLs
 ##############################################################################
 
 locals {
+
+      ########################################################################
+      # Hub VPC ACL Rules
+      ########################################################################
 
       hub_subnet_cidr_list = flatten([
             [
@@ -171,26 +175,31 @@ locals {
                         direction   = "outbound"
                   }
             ]
-    ])
+      ])
 
-    spoke_cidr_rules = flatten(
-        [
-            {
-                name        = "allow-all-traffic-proxy-inbound"
-                action      = "allow"
-                source      = "0.0.0.0/0"
-                destination = var.spoke_vpc_cidr_blocks["zone-1"][0]
-                direction   = "inbound"
-            },
-            {
-                name        = "allow-all-traffic-proxy-outbound"
-                action      = "allow"
-                destination = "0.0.0.0/0"
-                source      = var.spoke_vpc_cidr_blocks["zone-1"][0]
-                direction   = "outbound"
-            }
-        ]
-    )
+      ########################################################################
+      # Spoke VPC ACL Rules
+      ########################################################################
+
+
+      spoke_cidr_rules = flatten(
+            [
+                  {
+                        name        = "allow-all-traffic-spoke-inbound"
+                        action      = "allow"
+                        source      = "0.0.0.0/0"
+                        destination = var.spoke_vpc_cidr_blocks["zone-1"][0]
+                        direction   = "inbound"
+                  },
+                  {
+                        name        = "allow-all-traffic-spoke-outbound"
+                        action      = "allow"
+                        destination = "0.0.0.0/0"
+                        source      = var.spoke_vpc_cidr_blocks["zone-1"][0]
+                        direction   = "outbound"
+                  }
+            ]
+      )
 }
 
 ##############################################################################

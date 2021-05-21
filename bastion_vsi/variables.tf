@@ -8,14 +8,14 @@ variable ibmcloud_api_key {
 }
 
 variable unique_id {
-    description = "A unique identifier need to provision resources. Must begin with a letter"
-    type        = string
-    default     = "asset-roks"
-
-    validation  {
-      error_message = "Unique ID must begin and end with a letter and contain only letters, numbers, and - characters."
-      condition     = can(regex("^([a-z]|[a-z][-a-z0-9]*[a-z0-9])$", var.unique_id))
-    }
+  description = "A unique identifier need to provision resources. Must begin with a letter"
+  type        = string
+  default     = "asset-roks"
+  
+  validation  {
+    error_message = "Unique ID must begin and end with a letter and contain only letters, numbers, and - characters."
+    condition     = can(regex("^([a-z]|[a-z][-a-z0-9]*[a-z0-9])$", var.unique_id))
+  }
 }
 
 variable ibm_region {

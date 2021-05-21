@@ -59,6 +59,7 @@ rm -rf kubectl kubectl.sha256
 
 # Install IBM Cloud CLI
 curl -sL https://raw.githubusercontent.com/IBM-Cloud/ibm-cloud-developer-tools/master/linux-installer/idt-installer | bash
+sleep 10
 ibmcloud plugin install container-service
 
 # Install OpenShift CLI
@@ -249,10 +250,6 @@ terraform plan
 echo "yes" | terraform apply
 
 rm -rf terraform.tfvars
-sudo yum -y install epel-release
-sudo yum -y install nginx
-sudo systemctl start nginx  
-
   BASH
                  
 }
