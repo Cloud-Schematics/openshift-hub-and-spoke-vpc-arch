@@ -125,7 +125,107 @@ resource kubernetes_endpoints kube_api_via_nlb {
     depends_on = [ kubernetes_service.kube_api_via_nlb ]
 }
 
-##############################################################################' > nlb.tf
+##############################################################################' > ~/nlb.tf
+
+echo '##############################################################################
+# Create Proxy
+##############################################################################
+
+resource kubernetes_service_account crio_updater_ds {
+  metadata {
+    name = "crio-updater-ds"
+  }
+
+  depends_on = [ kubernetes_endpoints.kube_api_via_nlb ]
+}
+
+# https://jpapejr.github.io/content/roks_proxy.html
+resource null_resource oc_commands {
+  provisioner local-exec {
+    command = <<CLI
+      ibmcloud login --apikey $${var.ibmcloud_api_key} -r ${var.ibm_region} -g ${var.resource_group}
+      ibmcloud cs cluster config --cluster ${var.cluster_name} --admin 
+      oc project default 
+      oc adm policy add-scc-to-user privileged -z crio-updater-ds
+    CLI
+  }
+
+  depends_on = [ kubernetes_service_account.crio_updater_ds ]
+}
+
+resource kubernetes_daemonset add_proxy_to_crio {
+  metadata {
+    name      = "add-proxy-to-crio"
+    namespace = "default"
+  }
+
+  spec {
+    selector {
+      match_labels = {
+        name = "add-proxy-to-crio"
+      }
+    }
+
+    template {
+      metadata {
+        name = "add-proxy-to-crio"
+
+        labels = {
+          name = "add-proxy-to-crio"
+        }
+      }
+
+      spec {
+        volume {
+          name = "host"
+
+          host_path {
+            path = "/"
+            type = "Directory"
+          }
+        }
+
+        container {
+          name    = "add-proxy-to-crio"
+          image   = "icr.io/ibm/ibmcloud-backup-restore:latest"
+          command = ["/bin/sh", "-c", "+m"]
+          args    = [
+              "set -m;",
+              "chroot /host echo",
+              "NO_PROXY=\"localhost,127.0.0.1,172.20.0.1,172.21.0.0/16,172.17.0.0/18,161.26.0.0/16,166.8.0.0/14,172.20.0.0/16,${var.cidr_block_string}\"  > /host/etc/sysconfig/crio-network;",
+              "chroot /host echo HTTP_PROXY=\"http://10.241.0.11:3128/\" >> /host/etc/sysconfig/crio-network;",
+              "chroot /host echo HTTPS_PROXY=\"http://10.241.0.11:3128/\" >> /host/etc/sysconfig/crio-network;",
+              "chroot /host systemctl restart crio;",
+              "sleep 365d;"
+          ]
+
+          volume_mount {
+            name       = "host"
+            mount_path = "/host"
+          }
+
+          image_pull_policy = "Always"
+
+          security_context {
+            capabilities {
+              add = ["SYS_ADMIN", "SYS_CHROOT"]
+            }
+
+            privileged = true
+          }
+        }
+
+        service_account_name = "crio-updater-ds"
+        host_ipc             = true
+      }
+    }
+  }
+  depends_on = [ null_resource.oc_commands ]
+}
+
+##############################################################################' > ~/proxy.tf
+
+
 
 # Create Providers.tf
 echo '
@@ -194,7 +294,7 @@ provider kubernetes {
     cluster_ca_certificate = data.ibm_container_cluster_config.cluster.ca_certificate
 }
 
-##############################################################################' > providers.tf
+##############################################################################' > ~/providers.tf
 
 
 # Create Variables.tf
@@ -233,7 +333,7 @@ variable private_service_endpoint_port {
     type        = number
 }
 
-##############################################################################' > variables.tf
+##############################################################################' > ~/variables.tf
 
 # Create Environment variables
 echo '
@@ -242,7 +342,9 @@ ibm_region="'$IBM_REGION'"
 resource_group="'$RESOURCE_GROUP'"
 cluster_name="'$CLUSTER_NAME'"
 private_service_endpoint_port="'$PORT'"
-' > terraform.tfvars
+' > ~/terraform.tfvars
+
+cd ~/
 
 # Execute Terraform
 terraform init

@@ -67,28 +67,27 @@ module resources {
 module roks_cluster {
     source                          = "./roks_cluster"
     # Account Variables
-    unique_id                       = var.unique_id
-    ibm_region                      = var.ibm_region
-    resource_group_id               = data.ibm_resource_group.resource_group.id
+    unique_id          = var.unique_id
+    ibm_region         = var.ibm_region
+    resource_group_id  = data.ibm_resource_group.resource_group.id
     # VPC Variables
-    vpc_id                          = module.hub_vpc.vpc_id
-    subnet_zone_list                = module.hub_vpc.subnet_zone_list
+    vpc_id             = module.hub_vpc.vpc_id
+    subnet_zone_list   = module.hub_vpc.subnet_zone_list
     # Cluster Variables
-    machine_type                    = var.cluster_machine_type
-    workers_per_zone                = var.workers_per_zone
-    disable_public_service_endpoint = var.disable_public_service_endpoint
-    entitlement                     = var.entitlement
-    kube_version                    = var.kube_version
-    tags                            = var.tags
-    worker_pools                    = var.worker_pools
-    cos_id                          = module.resources.cos_id
-    kms_guid                        = module.resources.kms_guid
-    ibm_managed_key_id              = module.resources.ibm_managed_key_id
+    machine_type       = var.cluster_machine_type
+    workers_per_zone   = var.workers_per_zone
+    entitlement        = var.entitlement
+    kube_version       = var.kube_version
+    tags               = var.tags
+    worker_pools       = var.worker_pools
+    cos_id             = module.resources.cos_id
+    kms_guid           = module.resources.kms_guid
+    ibm_managed_key_id = module.resources.ibm_managed_key_id
     # Logging and Monitoring Variables
-    logdna_crn                      = module.resources.logdna_crn
-    logdna_guid                     = module.resources.logdna_guid
-    sysdig_crn                      = module.resources.sysdig_crn
-    sysdig_guid                     = module.resources.sysdig_guid
+    logdna_crn         = module.resources.logdna_crn
+    logdna_guid        = module.resources.logdna_guid
+    sysdig_crn         = module.resources.sysdig_crn
+    sysdig_guid        = module.resources.sysdig_guid
 }
 
 ##############################################################################
@@ -119,6 +118,7 @@ module bastion_vsi {
     cluster_id                            = module.roks_cluster.cluster_id
     cluster_name                          = module.roks_cluster.cluster_name
     cluster_private_service_endpoint_port = module.roks_cluster.cluster_private_service_endpoint_port
+    cidr_block_string                     = join(",",module.hub_vpc.subnet_zone_list.*.cidr)
 }
 
 ##############################################################################

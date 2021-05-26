@@ -159,22 +159,22 @@ locals {
                   }
             ],
             # Rules to deny any other inbound and outound traffic
-            [
-                  {
-                        name        = "deny-all-traffic-proxy-inbound"
-                        action      = "deny"
-                        source      = "0.0.0.0/0"
-                        destination = "0.0.0.0/0"
-                        direction   = "inbound"
-                  },
-                  {
-                        name        = "deny-all-traffic-proxy-outbound"
-                        action      = "allow"
-                        source      = "0.0.0.0/0"
-                        destination = "0.0.0.0/0"
-                        direction   = "outbound"
-                  }
-            ]
+            # [
+            #       {
+            #             name        = "deny-all-traffic-proxy-inbound"
+            #             action      = "deny"
+            #             source      = "0.0.0.0/0"
+            #             destination = "0.0.0.0/0"
+            #             direction   = "inbound"
+            #       },
+            #       {
+            #             name        = "deny-all-traffic-proxy-outbound"
+            #             action      = "allow"
+            #             source      = "0.0.0.0/0"
+            #             destination = "0.0.0.0/0"
+            #             direction   = "outbound"
+            #       }
+            # ]
       ])
 
       ########################################################################

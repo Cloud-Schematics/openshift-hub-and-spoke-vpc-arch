@@ -194,7 +194,7 @@ variable entitlement {
 variable kube_version {
   description = "Specify the Kubernetes version, including the major.minor version. To see available versions, run `ibmcloud ks versions`."
   type        = string
-  default     = "4.6.23_openshift"
+  default     = "4.5.39_openshift"
 
   validation {
       error_message = "To create a ROKS cluster, the kube version must include `openshift`."

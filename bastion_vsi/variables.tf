@@ -118,6 +118,11 @@ variable cluster_id {
   type        = string
 }
 
+variable cidr_block_string {
+  description = "A string containing cluster subnet cidr blocks separated by commas"
+  type        = string
+}
+
 ##############################################################################
 
 
