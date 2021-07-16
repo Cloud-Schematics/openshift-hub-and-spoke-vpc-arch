@@ -8,33 +8,41 @@ locals {
       # Hub VPC ACL Rules
       ########################################################################
 
-      hub_subnet_cidr_list = flatten([
+      spoke_subnet_cidr_list = flatten([
             [
                   # for each zone in the cidr blocks map
-                  for zone in keys(var.hub_vpc_cidr_blocks): 
+                  for zone in keys(var.spoke_vpc_cidr_blocks): 
                   [
                         # Create an object containing the rule name and the CIDR block
-                        for cidr in var.hub_vpc_cidr_blocks[zone]:
+                        for cidr in var.spoke_vpc_cidr_blocks[zone]:
                         {
                               # Format name zone-<>-subnet-<>
                               name = "zone-${
-                                    index(keys(var.hub_vpc_cidr_blocks), zone) + 1
+                                    index(keys(var.spoke_vpc_cidr_blocks), zone) + 1
                               }-subnet-${
-                                    index(var.hub_vpc_cidr_blocks[zone], cidr) + 1
+                                    index(var.spoke_vpc_cidr_blocks[zone], cidr) + 1
                               }"
                               cidr = cidr
                         }
                   ]
-            ], 
+            ],
+            local.gateway_subnet_cidr_list,
             [
                   {
                         name = "proxy-subnet"
-                        cidr = var.spoke_vpc_cidr_blocks["zone-1"][0]
+                        cidr = var.hub_vpc_cidr_blocks["proxy"][0]
                   }
             ]
       ])
 
-      hub_subnet_cidr_rules = flatten([
+      gateway_subnet_cidr_list = [
+            for cidr in var.gateway_cidr_blocks["gateway"]: {
+                  name = "gw-subnet-${index(var.gateway_cidr_blocks["gateway"], cidr) + 1}"
+                  cidr = cidr
+            }
+      ]
+
+      spoke_subnet_cidr_rules = flatten([
             [
                   # ROKS Rules
                   {
@@ -121,7 +129,7 @@ locals {
             ],
             # Create rules that allow incoming traffic from subnets
             [
-                  for subnet in local.hub_subnet_cidr_list:           
+                  for subnet in local.spoke_subnet_cidr_list:           
                   {
                         name        = "allow-traffic-${subnet.name}-inbound"
                         action      = "allow"
@@ -132,7 +140,7 @@ locals {
             ],
             # Create rules to allow outbound traffic to subnets
             [
-                  for subnet in local.hub_subnet_cidr_list:           
+                  for subnet in local.spoke_subnet_cidr_list:           
                   {
                         name        = "allow-traffic-${subnet.name}-outbound"
                         action      = "allow"
@@ -147,34 +155,52 @@ locals {
                         name        = "allow-all-traffic-proxy-inbound"
                         action      = "allow"
                         source      = "0.0.0.0/0"
-                        destination = var.spoke_vpc_cidr_blocks["zone-1"][0]
+                        destination = var.hub_vpc_cidr_blocks["proxy"][0]
                         direction   = "inbound"
                   },
                   {
                         name        = "allow-all-traffic-proxy-outbound"
                         action      = "allow"
                         destination = "0.0.0.0/0"
-                        source      = var.spoke_vpc_cidr_blocks["zone-1"][0]
+                        source      = var.hub_vpc_cidr_blocks["proxy"][0]
                         direction   = "outbound"
                   }
             ],
-            # Rules to deny any other inbound and outound traffic
-            # [
-            #       {
-            #             name        = "deny-all-traffic-proxy-inbound"
-            #             action      = "deny"
-            #             source      = "0.0.0.0/0"
-            #             destination = "0.0.0.0/0"
-            #             direction   = "inbound"
-            #       },
-            #       {
-            #             name        = "deny-all-traffic-proxy-outbound"
-            #             action      = "allow"
-            #             source      = "0.0.0.0/0"
-            #             destination = "0.0.0.0/0"
-            #             direction   = "outbound"
-            #       }
-            # ]
+            [
+                  {
+                        name        = "allow-all-table-in"
+                        action      = "allow"
+                        source      = "0.0.0.0/0"
+                        destination = "8.8.8.8/32"
+                        direction   = "inbound"
+                  },
+                  {
+                        name        = "allow-all-table-out"
+                        action      = "allow"
+                        destination = "0.0.0.0/0"
+                        source      = "8.8.8.8/32"
+                        direction   = "outbound"
+                  }
+            ],
+            # ules to allow all gateway traffic
+            [
+                  for subnet in local.gateway_subnet_cidr_list: {
+                        name        = "allow-all-traffic-${subnet.name}-inbound"
+                        action      = "allow"
+                        source      = "0.0.0.0/0"
+                        destination = subnet.cidr
+                        direction   = "inbound"
+                  }
+            ],
+            [
+                  for subnet in local.gateway_subnet_cidr_list: {
+                        name        = "allow-all-traffic-${subnet.name}-outbound"
+                        action      = "allow"
+                        destination = "0.0.0.0/0"
+                        source      = subnet.cidr
+                        direction   = "outbound"
+                  }
+            ]
       ])
 
       ########################################################################
@@ -182,24 +208,42 @@ locals {
       ########################################################################
 
 
-      spoke_cidr_rules = flatten(
+      hub_cidr_rules = flatten([
             [
                   {
                         name        = "allow-all-traffic-spoke-inbound"
                         action      = "allow"
                         source      = "0.0.0.0/0"
-                        destination = var.spoke_vpc_cidr_blocks["zone-1"][0]
+                        destination = var.hub_vpc_cidr_blocks["proxy"][0]
                         direction   = "inbound"
                   },
                   {
                         name        = "allow-all-traffic-spoke-outbound"
                         action      = "allow"
                         destination = "0.0.0.0/0"
-                        source      = var.spoke_vpc_cidr_blocks["zone-1"][0]
+                        source      = var.hub_vpc_cidr_blocks["proxy"][0]
+                        direction   = "outbound"
+                  }
+            ],
+            [
+                  for subnet in local.gateway_subnet_cidr_list: {
+                        name        = "allow-all-traffic-${subnet.name}-inbound"
+                        action      = "allow"
+                        source      = "0.0.0.0/0"
+                        destination = subnet.cidr
+                        direction   = "inbound"
+                  }
+            ],
+            [
+                  for subnet in local.gateway_subnet_cidr_list: {
+                        name        = "allow-all-traffic-${subnet.name}-outbound"
+                        action      = "allow"
+                        destination = "0.0.0.0/0"
+                        source      = subnet.cidr
                         direction   = "outbound"
                   }
             ]
-      )
+      ])
 }
 
 ##############################################################################

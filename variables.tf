@@ -16,7 +16,7 @@ variable ibmcloud_api_key {
 variable unique_id {
   description = "A unique identifier need to provision resources. Must begin with a letter"
   type        = string
-  default     = "asset-multizone"
+  default     = "jv-pa-test"
 
   validation  {
     error_message = "Unique ID must begin and end with a letter and contain only letters, numbers, and - characters."
@@ -61,7 +61,7 @@ variable resource_group {
 # Network variables
 ##############################################################################
 
-variable hub_vpc_cidr_blocks {
+variable spoke_vpc_cidr_blocks {
   description = "An object containing lists of CIDR blocks. Each CIDR block will be used to create a subnet"
 
   type        = object({
@@ -81,45 +81,6 @@ variable hub_vpc_cidr_blocks {
 
     zone-3 = [
       "10.70.10.0/24"
-    ]
-  }
-
-  validation {
-    error_message = "The var.cidr_blocks objects must have 1, 2, or 3 keys."
-    condition     = length(keys(var.hub_vpc_cidr_blocks)) <= 3 && length(keys(var.hub_vpc_cidr_blocks)) >= 1
-  }
-
-  validation {
-    error_message = "Each list must have at least one CIDR block."
-    condition     = length(distinct(
-      [
-        for zone in keys(var.hub_vpc_cidr_blocks):
-        false if length(var.hub_vpc_cidr_blocks[zone]) == 0
-      ]
-    )) == 0
-  }
-
-  validation {
-    error_message = "Each item in each list must contain a valid CIDR block."
-    condition     = length(
-      distinct(
-        flatten([
-          for zone in keys(var.hub_vpc_cidr_blocks):
-          false if length([
-            for cidr in var.hub_vpc_cidr_blocks[zone]:
-            false if !can(regex("^(2[0-5][0-9]|1[0-9]{1,2}|[0-9]{1,2}).(2[0-5][0-9]|1[0-9]{1,2}|[0-9]{1,2}).(2[0-5][0-9]|1[0-9]{1,2}|[0-9]{1,2}).(2[0-5][0-9]|1[0-9]{1,2}|[0-9]{1,2})\\/(3[0-2]|2[0-9]|1[0-9]|[0-9])$", cidr))
-          ]) > 0
-        ])
-      )
-    ) == 0
-  }
-}
-
-variable spoke_vpc_cidr_blocks {
-  description = "An object containing lists of CIDR blocks. Each CIDR block will be used to create a subnet"
-  default     = {
-    zone-1 = [
-      "10.100.10.0/24"
     ]
   }
 
@@ -152,7 +113,56 @@ variable spoke_vpc_cidr_blocks {
       )
     ) == 0
   }
+}
 
+variable hub_vpc_cidr_blocks {
+  description = "An object containing lists of CIDR blocks. Each CIDR block will be used to create a subnet"
+  default     = {
+    proxy = [
+      "10.90.10.0/24"
+    ]
+  }
+
+  validation {
+    error_message = "The var.cidr_blocks objects must have 1, 2, or 3 keys."
+    condition     = length(keys(var.hub_vpc_cidr_blocks)) <= 3 && length(keys(var.hub_vpc_cidr_blocks)) >= 1
+  }
+
+  validation {
+    error_message = "Each list must have at least one CIDR block."
+    condition     = length(distinct(
+      [
+        for zone in keys(var.hub_vpc_cidr_blocks):
+        false if length(var.hub_vpc_cidr_blocks[zone]) == 0
+      ]
+    )) == 0
+  }
+
+  validation {
+    error_message = "Each item in each list must contain a valid CIDR block."
+    condition     = length(
+      distinct(
+        flatten([
+          for zone in keys(var.hub_vpc_cidr_blocks):
+          false if length([
+            for cidr in var.hub_vpc_cidr_blocks[zone]:
+            false if !can(regex("^(2[0-5][0-9]|1[0-9]{1,2}|[0-9]{1,2}).(2[0-5][0-9]|1[0-9]{1,2}|[0-9]{1,2}).(2[0-5][0-9]|1[0-9]{1,2}|[0-9]{1,2}).(2[0-5][0-9]|1[0-9]{1,2}|[0-9]{1,2})\\/(3[0-2]|2[0-9]|1[0-9]|[0-9])$", cidr))
+          ]) > 0
+        ])
+      )
+    ) == 0
+  }
+
+}
+
+variable gateway_cidr_blocks {
+  default = {
+    gateway = [
+      "10.120.10.0/29",
+      "10.130.10.0/29",
+      "10.110.10.0/29"
+    ]
+  }
 }
 
 ##############################################################################
@@ -194,7 +204,7 @@ variable entitlement {
 variable kube_version {
   description = "Specify the Kubernetes version, including the major.minor version. To see available versions, run `ibmcloud ks versions`."
   type        = string
-  default     = "4.5.39_openshift"
+  default     = "4.6.34_openshift"
 
   validation {
       error_message = "To create a ROKS cluster, the kube version must include `openshift`."

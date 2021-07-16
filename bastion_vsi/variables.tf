@@ -80,9 +80,8 @@ variable proxy_subnet {
 # VSI Variables
 ##############################################################################
 
-variable ssh_public_key {
-  description = "ssh public key to use for vsi"
-  type        = string
+variable ssh_key_id {
+  description = "ID of SSH key to use when provisioning VSI"
 }
 
 ##############################################################################

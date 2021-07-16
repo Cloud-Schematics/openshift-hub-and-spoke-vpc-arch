@@ -2,21 +2,6 @@
 # VPC Outputs
 ##############################################################################
 
-output hub_vpc_id {
-    description = "ID of VPC created"
-    value       = module.hub_vpc.vpc_id
-}
-
-output hub_vpc_subnet_zone_list {
-    description = "A map containing cluster subnet IDs and subnet zones"
-    value       = module.hub_vpc.subnet_zone_list
-}
-
-output hub_vpc_subnet_detail_list {
-    description = "A list of subnets containing names, CIDR blocks, and zones."
-    value       = module.hub_vpc.subnet_detail_list
-}
-
 output spoke_vpc_id {
     description = "ID of VPC created"
     value       = module.spoke_vpc.vpc_id
@@ -30,6 +15,21 @@ output spoke_vpc_subnet_zone_list {
 output spoke_vpc_subnet_detail_list {
     description = "A list of subnets containing names, CIDR blocks, and zones."
     value       = module.spoke_vpc.subnet_detail_list
+}
+
+output hub_vpc_id {
+    description = "ID of VPC created"
+    value       = module.hub_vpc.vpc_id
+}
+
+output hub_vpc_subnet_zone_list {
+    description = "A map containing cluster subnet IDs and subnet zones"
+    value       = module.hub_vpc.subnet_zone_list
+}
+
+output hub_vpc_subnet_detail_list {
+    description = "A list of subnets containing names, CIDR blocks, and zones."
+    value       = module.hub_vpc.subnet_detail_list
 }
 
 ##############################################################################
@@ -83,6 +83,17 @@ output cluster_private_service_endpoint_port {
 
 ##############################################################################
 
+
+##############################################################################
+# Gateway Outputs
+##############################################################################
+
+output gateway_vsi_info {
+    description = "Information for Gateway VSI"
+    value       = module.palo_alto_gateway.gateway_vsi_info
+}
+
+##############################################################################
 
 ##############################################################################
 # VSI Outputs

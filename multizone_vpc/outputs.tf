@@ -12,6 +12,11 @@ output vpc_crn {
   value       = ibm_is_vpc.vpc.resource_crn
 }
 
+output acl_id {
+  description = "ACL for VPC"
+  value       = ibm_is_network_acl.multizone_acl.id
+}
+
 ##############################################################################
 
 

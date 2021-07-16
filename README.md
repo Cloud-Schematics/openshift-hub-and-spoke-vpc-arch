@@ -70,7 +70,7 @@ Outbound  | Allow communication to Services over Private Service Endpoint | Allo
 Outbound  | Allow incoming traffic requests to apps on worker nodes       | Allow        | TCP      | 0.0.0.0/0      | 30000 - 32767 | 0.0.0.0/0     | -
 Outbound  | Allow load balancer and ingress app incoming traffic          | Allow        | TCP      | 0.0.0.0/0      | Any           | 0.0.0.0/0     | 443
 
-#### Hube VPC Dynamic ACL Rules
+#### Hub VPC Dynamic ACL Rules
 
 For each subnet in the VPC, a rule is created to allow inbound and outbound traffic from that subnet. In addition, a rule is created to allow all traffic to the Spoke VPC subnet. Here is an example of the dynamically created rules using the CIDR blocks found in [variables.tf](variables.tf).
 
@@ -183,7 +183,7 @@ To view the code that will be installed on the VSI, refer to the [./bastion_vsi/
 
 The windows VSI uses user data to install `chocolatey` and `kubectl`. Use this script to install the IBM Cloud CLI onto your Windows instance:
 
-```
+```ps:
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 iex(New-Object Net.WebClient).DownloadString('https://clis.cloud.ibm.com/install/powershell')
 ```
@@ -201,8 +201,8 @@ ibmcloud_api_key                | string sensitive = true                       
 unique_id                       | string                                                                               | A unique identifier need to provision resources. Must begin with a letter                                                                                                                                                                                                                                                                                                                                                                                     | `"asset-multizone"`
 ibm_region                      | string                                                                               | IBM Cloud region where all resources will be deployed                                                                                                                                                                                                                                                                                                                                                                                                         | 
 resource_group                  | string                                                                               | Name of resource group where all infrastructure will be provisioned                                                                                                                                                                                                                                                                                                                                                                                           | `"asset-development"`
-hub_vpc_cidr_blocks             | object({ zone-1 = list(string) zone-2 = list(string) zone-3 = list(string) })        | An object containing lists of CIDR blocks. Each CIDR block will be used to create a subnet                                                                                                                                                                                                                                                                                                                                                                    | `{`<br>`zone-1 = [`<br>`"10.10.10.0/24" ],`<br>`zone-2 = [`<br>`"10.40.10.0/24" ],`<br>`zone-3 = [`<br>`"10.70.10.0/24" ]`<br>`}`
-spoke_vpc_cidr_blocks           |                                                                                      | An object containing lists of CIDR blocks. Each CIDR block will be used to create a subnet                                                                                                                                                                                                                                                                                                                                                                    | `{`<br>`zone-1 = [`<br>`"10.100.10.0/24" ]`<br>`}`
+spoke_vpc_cidr_blocks             | object({ zone-1 = list(string) zone-2 = list(string) zone-3 = list(string) })        | An object containing lists of CIDR blocks. Each CIDR block will be used to create a subnet                                                                                                                                                                                                                                                                                                                                                                    | `{`<br>`zone-1 = [`<br>`"10.10.10.0/24" ],`<br>`zone-2 = [`<br>`"10.40.10.0/24" ],`<br>`zone-3 = [`<br>`"10.70.10.0/24" ]`<br>`}`
+hub_vpc_cidr_blocks           |                                                                                      | An object containing lists of CIDR blocks. Each CIDR block will be used to create a subnet                                                                                                                                                                                                                                                                                                                                                                    | `{`<br>`zone-1 = [`<br>`"10.100.10.0/24" ]`<br>`}`
 cluster_machine_type            | string                                                                               | The flavor of VPC worker node to use for your cluster. Use `ibmcloud ks flavors` to find flavors for a region.                                                                                                                                                                                                                                                                                                                                                | `"bx2.4x16"`
 workers_per_zone                | number                                                                               | Number of workers to provision in each subnet                                                                                                                                                                                                                                                                                                                                                                                                                 | `2`
 disable_public_service_endpoint | bool                                                                                 | Disable public service endpoint for cluster                                                                                                                                                                                                                                                                                                                                                                                                                   | `true`
@@ -228,12 +228,12 @@ windows_vsi_machine_type        | string                                        
 
 Output Name                           | Description
 ------------------------------------- |-------------------------------------------------------------
-hub_vpc_id                            | ID of VPC created
-hub_vpc_subnet_zone_list              | A map containing cluster subnet IDs and subnet zones
-hub_vpc_subnet_detail_list            | A list of subnets containing names, CIDR blocks, and zones.
-spoke_vpc_id                          | ID of VPC created
-spoke_vpc_subnet_zone_list            | A map containing cluster subnet IDs and subnet zones
-spoke_vpc_subnet_detail_list          | A list of subnets containing names, CIDR blocks, and zones.
+spoke_vpc_id                            | ID of VPC created
+spoke_vpc_subnet_zone_list              | A map containing cluster subnet IDs and subnet zones
+spoke_vpc_subnet_detail_list            | A list of subnets containing names, CIDR blocks, and zones.
+hub_vpc_id                          | ID of VPC created
+hub_vpc_subnet_zone_list            | A map containing cluster subnet IDs and subnet zones
+hub_vpc_subnet_detail_list          | A list of subnets containing names, CIDR blocks, and zones.
 cos_id                                | ID of COS instance
 kms_guid                              | GUID of Key Protect Instance
 ibm_managed_key_id                    | GUID of User Managed Key

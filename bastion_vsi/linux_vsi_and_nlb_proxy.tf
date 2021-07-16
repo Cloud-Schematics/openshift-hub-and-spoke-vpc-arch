@@ -1,22 +1,11 @@
 ##############################################################################
-# SSH key for creating VSI
-##############################################################################
-
-resource ibm_is_ssh_key ssh_key {
-  name       = "${var.unique_id}-ssh-key"
-  public_key = var.ssh_public_key
-}
-
-##############################################################################
-
-
-##############################################################################
 # Data Blocks
 ##############################################################################
 
 data ibm_is_image linux_vsi_image {
   name = var.linux_vsi_image
 }
+
 
 ##############################################################################
 
@@ -38,7 +27,7 @@ resource ibm_is_instance linux_vsi {
   
     vpc            = var.vpc_id
     zone           = var.proxy_subnet.zone
-    keys           = [ ibm_is_ssh_key.ssh_key.id ]
+    keys           = [ var.ssh_key_id ]
 
     user_data  = <<BASH
 #!/bin/bash
@@ -63,18 +52,18 @@ sleep 10
 ibmcloud plugin install container-service
 
 # Install OpenShift CLI
-wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-4.5/openshift-client-linux-4.5.39.tar.gz
-tar xvzf openshift-client-linux-4.5.39.tar.gz 
+wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-4.5/openshift-client-linux-4.5.40.tar.gz
+tar xvzf openshift-client-linux-4.5.40.tar.gz 
 mv oc /usr/local/bin
 
 # Install Terraform 
 yum install -y net-tools
 yum install unzip -y
-wget https://releases.hashicorp.com/terraform/0.13.6/terraform_0.13.6_linux_amd64.zip
-unzip terraform_0.13.6_linux_amd64.zip
+wget https://releases.hashicorp.com/terraform/0.14.6/terraform_0.14.6_linux_amd64.zip
+unzip terraform_0.14.6_linux_amd64.zip
 chmod +x terraform
 mv terraform /usr/local/bin
-rm -rf terraform_0.13.6_linux_amd64.zip
+rm -rf terraform_0.14.6_linux_amd64.zip
 
 # Create Terraform Files
 
@@ -151,76 +140,6 @@ resource null_resource oc_commands {
   }
 
   depends_on = [ kubernetes_service_account.crio_updater_ds ]
-}
-
-resource kubernetes_daemonset add_proxy_to_crio {
-  metadata {
-    name      = "add-proxy-to-crio"
-    namespace = "default"
-  }
-
-  spec {
-    selector {
-      match_labels = {
-        name = "add-proxy-to-crio"
-      }
-    }
-
-    template {
-      metadata {
-        name = "add-proxy-to-crio"
-
-        labels = {
-          name = "add-proxy-to-crio"
-        }
-      }
-
-      spec {
-        volume {
-          name = "host"
-
-          host_path {
-            path = "/"
-            type = "Directory"
-          }
-        }
-
-        container {
-          name    = "add-proxy-to-crio"
-          image   = "icr.io/ibm/ibmcloud-backup-restore:latest"
-          command = ["/bin/sh", "-c", "+m"]
-          args    = [
-              "set -m;",
-              "chroot /host echo",
-              "NO_PROXY=\"localhost,127.0.0.1,172.20.0.1,172.21.0.0/16,172.17.0.0/18,161.26.0.0/16,166.8.0.0/14,172.20.0.0/16,${var.cidr_block_string}\"  > /host/etc/sysconfig/crio-network;",
-              "chroot /host echo HTTP_PROXY=\"http://10.241.0.11:3128/\" >> /host/etc/sysconfig/crio-network;",
-              "chroot /host echo HTTPS_PROXY=\"http://10.241.0.11:3128/\" >> /host/etc/sysconfig/crio-network;",
-              "chroot /host systemctl restart crio;",
-              "sleep 365d;"
-          ]
-
-          volume_mount {
-            name       = "host"
-            mount_path = "/host"
-          }
-
-          image_pull_policy = "Always"
-
-          security_context {
-            capabilities {
-              add = ["SYS_ADMIN", "SYS_CHROOT"]
-            }
-
-            privileged = true
-          }
-        }
-
-        service_account_name = "crio-updater-ds"
-        host_ipc             = true
-      }
-    }
-  }
-  depends_on = [ null_resource.oc_commands ]
 }
 
 ##############################################################################' > ~/proxy.tf
@@ -350,6 +269,28 @@ cd ~/
 terraform init
 terraform plan
 echo "yes" | terraform apply
+
+ibmcloud login --apikey $IBMCLOUD_API_KEY -r $IBM_REGION -g $RESOURCE_GROUP
+ibmcloud plugin install container-service
+ibmcloud cs cluster config --cluster $CLUSTER_NAME --admin 
+
+set -o xtrace
+for NODE in `oc get no -oname`; do
+    echo $NODE
+    oc debug $NODE -- /bin/sh -c 'echo NO_PROXY="localhost,127.0.0.1,172.20.0.1,172.21.0.0/16,172.17.0.0/18,161.26.0.0/16,166.8.0.0/14,172.20.0.0/16,10.10.10.0/24,10.40.10.0/24,10.70.10.0/24"  > /host/etc/sysconfig/crio-network;'
+    oc debug $NODE -- /bin/sh -c 'echo HTTP_PROXY="http://10.241.0.11:3128/" >> /host/etc/sysconfig/crio-network;'
+    oc debug $NODE -- /bin/sh -c 'echo HTTPS_PROXY="http://10.241.0.11:3128/" >> /host/etc/sysconfig/crio-network;'
+    oc debug $NODE -- /bin/sh -c 'cat /host/etc/sysconfig/crio-network;'
+    oc label $NODE crio-proxified=true; 
+done
+for WORKER in ` ibmcloud cs worker ls --cluster $CLUSTER_NAME | grep kube | cut -d' ' -f1`; do
+    echo $WORKER
+    ibmcloud cs worker reboot -f --skip-master-health --worker $WORKER --cluster $CLUSTER_NAME;
+    sleep 5m;
+done
+
+echo "Proxified nodes:"
+oc get nodes -l crio-proxified=true
 
 rm -rf terraform.tfvars
   BASH

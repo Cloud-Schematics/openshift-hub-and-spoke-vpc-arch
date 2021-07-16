@@ -27,7 +27,7 @@ resource ibm_is_instance windows_vsi {
   
   vpc            = var.vpc_id
   zone           = var.proxy_subnet.zone
-  keys           = [ ibm_is_ssh_key.ssh_key.id ]
+  keys           = [ var.ssh_key_id ]
 
   user_data = <<POWERSHELL
 #ps1_sysnative

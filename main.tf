@@ -13,28 +13,28 @@ data ibm_resource_group resource_group {
 # Create VPC Architecture
 ##############################################################################
 
-module hub_vpc {
+module spoke_vpc {
     source            = "./multizone_vpc"
     # Account Variables
-    unique_id         = "${var.unique_id}-hub"
+    unique_id         = "${var.unique_id}-spoke"
     ibm_region        = var.ibm_region
     resource_group_id = data.ibm_resource_group.resource_group.id
     # VPC Variables
-    cidr_blocks       = var.hub_vpc_cidr_blocks
-    acl_rules         = local.hub_subnet_cidr_rules
-    # routing_table_id  = ibm_is_vpc_routing_table.hub_vpc_routing_table.routing_table
+    cidr_blocks       = var.spoke_vpc_cidr_blocks
+    acl_rules         = local.spoke_subnet_cidr_rules
+    routing_table_id  = ibm_is_vpc_routing_table.spoke_vpc_routing_table.routing_table
 }
 
-module spoke_vpc {
+module hub_vpc {
     source                = "./multizone_vpc"
     # Account Variables
-    unique_id             = "${var.unique_id}-spoke"
+    unique_id             = "${var.unique_id}-hub"
     ibm_region            = var.ibm_region
     resource_group_id     = data.ibm_resource_group.resource_group.id
     # VPC Variables
-    cidr_blocks           = var.spoke_vpc_cidr_blocks
+    cidr_blocks           = var.hub_vpc_cidr_blocks
     enable_public_gateway = true
-    acl_rules             = local.spoke_cidr_rules
+    acl_rules             = local.hub_cidr_rules
 }
 
 ##############################################################################
@@ -71,8 +71,8 @@ module roks_cluster {
     ibm_region         = var.ibm_region
     resource_group_id  = data.ibm_resource_group.resource_group.id
     # VPC Variables
-    vpc_id             = module.hub_vpc.vpc_id
-    subnet_zone_list   = module.hub_vpc.subnet_zone_list
+    vpc_id             = module.spoke_vpc.vpc_id
+    subnet_zone_list   = module.spoke_vpc.subnet_zone_list
     # Cluster Variables
     machine_type       = var.cluster_machine_type
     workers_per_zone   = var.workers_per_zone
@@ -94,6 +94,39 @@ module roks_cluster {
 
 
 ##############################################################################
+# SSH key for creating VSI
+##############################################################################
+
+resource ibm_is_ssh_key ssh_key {
+  name       = "${var.unique_id}-ssh-key"
+  public_key = var.ssh_public_key
+}
+
+##############################################################################
+
+
+##############################################################################
+# Create Palo Alto Gateway
+##############################################################################
+
+module palo_alto_gateway {
+    source = "./gateway"
+    # Account Variables
+    unique_id         = var.unique_id
+    ibm_region        = var.ibm_region
+    resource_group_id = data.ibm_resource_group.resource_group.id
+    # VPC Variables
+    vpc_id            = module.hub_vpc.vpc_id
+    cidr_blocks       = var.gateway_cidr_blocks
+    ssh_key_id        = ibm_is_ssh_key.ssh_key.id
+    acl_id            = module.hub_vpc.acl_id
+    zone              = 2
+}
+
+##############################################################################
+
+
+##############################################################################
 # Create Bastion VSI
 ##############################################################################
 
@@ -106,9 +139,9 @@ module bastion_vsi {
     resource_group                        = var.resource_group
     resource_group_id                     = data.ibm_resource_group.resource_group.id
     # VPC Variables
-    vpc_id                                = module.spoke_vpc.vpc_id
-    proxy_subnet                          = module.spoke_vpc.subnet_zone_list[0]
-    ssh_public_key                        = var.ssh_public_key
+    vpc_id                                = module.hub_vpc.vpc_id
+    proxy_subnet                          = module.hub_vpc.subnet_zone_list[0]
+    ssh_key_id                            = ibm_is_ssh_key.ssh_key.id
     # VSI Variables
     linux_vsi_image                       = var.linux_vsi_image
     linux_vsi_machine_type                = var.linux_vsi_machine_type
@@ -118,7 +151,7 @@ module bastion_vsi {
     cluster_id                            = module.roks_cluster.cluster_id
     cluster_name                          = module.roks_cluster.cluster_name
     cluster_private_service_endpoint_port = module.roks_cluster.cluster_private_service_endpoint_port
-    cidr_block_string                     = join(",",module.hub_vpc.subnet_zone_list.*.cidr)
+    cidr_block_string                     = join(",",module.spoke_vpc.subnet_zone_list.*.cidr)
 }
 
 ##############################################################################
