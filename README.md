@@ -1,4 +1,4 @@
-# Red Hat OpenShift Hub and Spoke VPC
+# Red Hat OpenShift Hub and Spoke VPC with Gateway
 
 This template creates a multizone Hub VPC, an OpenShift cluster on that VPC, and bastion VSI on a Spoke VPC to allow communication with the cluster over the private service endpoint.
 
