@@ -2,7 +2,7 @@
 
 This template creates a multizone Hub VPC, an OpenShift cluster on that VPC, and bastion VSI on a Spoke VPC to allow communication with the cluster over the private service endpoint.
 
-![Architecture](.docs/hub-and-spoke-arch.png)
+![Architecture](.docs/roks-gw-arch.png)
 
 -----
 
@@ -11,19 +11,21 @@ This template creates a multizone Hub VPC, an OpenShift cluster on that VPC, and
 1. [IBM Cloud Resources](##IBM-Cloud-Resources)
     - [Resources](###Resources)
     - [Logging and Monitoring Resources](###Logging-and-Monitoring-Resources)
-2. [Hub VPC](##Hub-VPC)
-    - [Hub VPC Access Control List](###Hub-VPC-Access-Control-List)
-    - [Hub VPC Security Group Rules](###Hub-VPC-Security-Group-Rules)
-3. [Spoke VPC](##Spoke-VPC)
+2. [Spoke VPC](##Spoke-VPC)
     - [Spoke VPC Access Control List](###Spoke-VPC-Access-Control-List)
     - [Spoke VPC Security Group Rules](###Spoke-VPC-Security-Group-Rules)
+3. [Hub VPC](##Hub-VPC)
+    - [Hub VPC Access Control List](###Hub-VPC-Access-Control-List)
+    - [Hub VPC Security Group Rules](###Hub-VPC-Security-Group-Rules)
 4. [ROKS Cluster](##ROKS-Cluster)
     - [Cluster Logging and Monitoring](###Cluster-Logging-and-Monitoring)
-5. [Bastion VSI](##Bastion-VSI)
+5. [Gateway VSI](##Gateway-VSI)
+6. [Bastion VSI](##Bastion-VSI)
     - [Linux VSI](###Linux-VSI)
     - [Windows VSI](###Windows-VSI)
-6. [Architecture Variables](##Architecture-Variables)
-7. [Module Outputs](##module-outputs)
+7. [Architecture Variables](##Architecture-Variables)
+    - [Routing Table](###Routing-Table)
+8. [Module Outputs](##module-outputs)
 
 -----
 
@@ -41,7 +43,7 @@ In addition, this module creates a LogDNA instance and a Sysdig instance.
 
 -----
 
-## Hub VPC
+## Spoke VPC
 
 This module creates a VPC with any number of subnets across 1, 2, or 3 zones. These subnets are where the OpenShift cluster will be provisioned.
 
@@ -49,13 +51,13 @@ The VPC resources can be found in the [multizone_vpc](/multizone_vpc) folder.
 
 -----
 
-### Hub VPC Access Control List
+### Spoke VPC Access Control List
 
 The VPC in this template uses an Access Control List to direct traffic. This traffic pattern is based on the [OpenShift VPC Network Policy Documentation](https://cloud.ibm.com/docs/openshift?topic=openshift-vpc-network-policy#acls). ACL rules are created in [acl_rules.tf](./acl_rules.tf).
 
 The following ACL Rules are created automatically on provision:
 
-#### Hube VPC Static ACL Rules
+#### Spoke VPC Static ACL Rules
 
 These ACL rules will be automatically created for the VPC regardless of subnet CIDR blocks:
 
@@ -70,7 +72,7 @@ Outbound  | Allow communication to Services over Private Service Endpoint | Allo
 Outbound  | Allow incoming traffic requests to apps on worker nodes       | Allow        | TCP      | 0.0.0.0/0      | 30000 - 32767 | 0.0.0.0/0     | -
 Outbound  | Allow load balancer and ingress app incoming traffic          | Allow        | TCP      | 0.0.0.0/0      | Any           | 0.0.0.0/0     | 443
 
-#### Hub VPC Dynamic ACL Rules
+#### Hub Spoke Dynamic ACL Rules
 
 For each subnet in the VPC, a rule is created to allow inbound and outbound traffic from that subnet. In addition, a rule is created to allow all traffic to the Spoke VPC subnet. Here is an example of the dynamically created rules using the CIDR blocks found in [variables.tf](variables.tf).
 
@@ -93,7 +95,7 @@ The `multizone_vpc` module accepts an `acl_rules` argument that allows for the c
 
 -----
 
-### Hub VPC Security Group Rules
+### Spoke VPC Security Group Rules
 
 A security group rule is created for the default VPC security group to allow all inbound traffic within the VPC.
 
@@ -101,7 +103,7 @@ The `multizone_vpc` module accepts a `security_group_rules` argument that allows
 
 ---
 
-## Spoke VPC
+## Hub VPC
 
 This module creates a VPC with any number of subnets across 1, 2, or 3 zones. By default, a single subnet is created in zone one. This subnet is where the [Bastion VSI](##bastion-vsi) will be provisioned.
 
@@ -109,13 +111,13 @@ The VPC resources can be found in the [multizone_vpc](/multizone_vpc) folder.
 
 -----
 
-### Spoke VPC Access Control List
+### Hub VPC Access Control List
 
 The VPC in this template uses an Access Control List to direct traffic. This traffic pattern is based on the [OpenShift VPC Network Policy Documentation](https://cloud.ibm.com/docs/openshift?topic=openshift-vpc-network-policy#acls).
 
 The following ACL Rules are created automatically on provision:
 
-#### Spoke VPC Dynamic ACL Rules
+#### Hub VPC Dynamic ACL Rules
 
 For each subnet in the VPC, a rule is created to allow inbound and outbound traffic from that subnet. In addition, a rule is created to allow all traffic to the Spoke VPC VSI subnet. Here is an example of the dynamically created rules using the CIDR blocks found in [variables.tf](variables.tf).
 
@@ -130,7 +132,7 @@ The `multizone_vpc` module accepts an `acl_rules` argument that allows for the c
 
 -----
 
-### Spoke VPC Security Group Rules
+### Hub VPC Security Group Rules
 
 A security group rule is created for the default VPC security group to allow all inbound traffic within the VPC.
 
@@ -141,7 +143,7 @@ The `multizone_vpc` module accepts a `security_group_rules` argument that allows
 
 ## ROKS Cluster
 
-This module creates a Red Hat OpenShift Cluster across all the subnets created for the [VPC](##VPC) except for the proxy subnet. This module can also dynamically create additional worker pools across the subnet. When the cluster has finished creating, the module will also install LogDNA and Sysdig agents onto the cluster.
+This module creates a Red Hat OpenShift Cluster across all the subnets created for the [Spoke VPC](##VPC) except for the proxy subnet. This module can also dynamically create additional worker pools across the subnet. When the cluster has finished creating, the module will also install LogDNA and Sysdig agents onto the cluster.
 
 The cluster resources can be found in the [roks_cluster](/roks_cluster) folder.
 
@@ -156,6 +158,16 @@ This module creates a resource key for the Sysdig and LogDNA resource instances 
 As of the IBM Terraform Provider v1.25.0, the default Sysdig agent Daemonset uses the Sysdig Agent image hosted at `quay.io/sysdig/agent`. As a workaround, replace the default image in the Sysdig daemon set in the kubernetes namespace `ibm-observe` with `icr.io/ext/sysdig/agent:latest`. This will enable sysdig monitoring over the private service endpoint
 
 -----
+
+## Gateway VSI
+
+This module creates a Palo Alto VSI based on [this PaloAltoNetworks Git Repo](https://github.com/PaloAltoNetworks/ibmcloud) in the [Hub VPC](###Hub-VPC). This gateway uses a routing table to allow traffic from the ROKS cluster on the [Spoke VPC](##Spoke-VPCC) to reach the internet without a public gateways being attached. For this example, the routing table allows external traffic to `8.8.8.8/32`.
+
+### Routing Table
+
+In this example module, a routing table rule is dynamically created for each subnet on the [Spoke VPC](##Spoke-VPC)
+
+---
 
 ## Bastion VSI
 
